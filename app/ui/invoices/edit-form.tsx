@@ -1,5 +1,9 @@
 'use client';
 
+// 1. Import useFormState and the State type
+import { useFormState } from 'react-dom';
+import { State, updateInvoice } from '@/app/lib/actions';
+
 import { CustomerField, InvoiceForm } from '@/app/lib/definitions';
 import {
   CheckIcon,
@@ -10,6 +14,10 @@ import {
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 
+
+// 2. Define the initial state object
+const initialState: State = { message: null }; 
+
 export default function EditInvoiceForm({
   invoice,
   customers,
@@ -17,8 +25,16 @@ export default function EditInvoiceForm({
   invoice: InvoiceForm;
   customers: CustomerField[];
 }) {
+  // Bind the ID to the action, but it returns an action function 
+  // with the signature: (prevState, formData) => Promise<State>
+  const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
+  
+  // 3. Initialize useFormState with the bound action and initial state
+  const [state, dispatch] = useFormState(updateInvoiceWithId, initialState);
+  
   return (
-    <form>
+    // 4. Use 'dispatch' as the form action
+    <form action={dispatch}> 
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
@@ -26,6 +42,8 @@ export default function EditInvoiceForm({
             Choose customer
           </label>
           <div className="relative">
+            {/* Hiding the ID field for form submission is a good practice */}
+            <input type="hidden" name="id" defaultValue={invoice.id} /> 
             <select
               id="customer"
               name="customerId"
@@ -43,6 +61,7 @@ export default function EditInvoiceForm({
             </select>
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
+          {/* Display validation errors for customerId here if needed later */}
         </div>
 
         {/* Invoice Amount */}
@@ -63,6 +82,7 @@ export default function EditInvoiceForm({
               />
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
+             {/* Display validation errors for amount here if needed later */}
           </div>
         </div>
 
@@ -108,7 +128,14 @@ export default function EditInvoiceForm({
             </div>
           </div>
         </fieldset>
+         {/* Display validation errors for status here if needed later */}
       </div>
+      
+      {/* 5. Display the database error message from the state object */}
+      <div aria-live="polite" className="my-2 text-sm text-red-500">
+        {state.message && <p>{state.message}</p>}
+      </div>
+      
       <div className="mt-6 flex justify-end gap-4">
         <Link
           href="/dashboard/invoices"
