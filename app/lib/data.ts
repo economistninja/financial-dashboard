@@ -9,9 +9,21 @@ import {
 } from './definitions';
 import { formatCurrency } from './utils';
 
+// Add this helper function at the top
+function shouldSkipDatabase() {
+  return process.env.NEXT_PHASE === 'phase-build' || 
+         !process.env.DATABASE_URL ||
+         process.env.VERCEL === '1';
+}
+
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function fetchRevenue() {
+  // ADD BUILD CHECK
+  if (shouldSkipDatabase()) {
+    return [];
+  }
+
   try {
     // Artificially delay a response for demo purposes.
     // Don't do this in production :)
@@ -31,6 +43,11 @@ export async function fetchRevenue() {
 }
 
 export async function fetchLatestInvoices() {
+  // ADD BUILD CHECK
+  if (shouldSkipDatabase()) {
+    return [];
+  }
+
   try {
     const data = await sql<LatestInvoiceRaw[]>`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
@@ -51,6 +68,16 @@ export async function fetchLatestInvoices() {
 }
 
 export async function fetchCardData() {
+  // ADD BUILD CHECK
+  if (shouldSkipDatabase()) {
+    return {
+      numberOfInvoices: 0,
+      numberOfCustomers: 0,
+      totalPaidInvoices: formatCurrency(0),
+      totalPendingInvoices: formatCurrency(0),
+    };
+  }
+
   try {
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
@@ -90,6 +117,11 @@ export async function fetchFilteredInvoices(
   query: string,
   currentPage: number,
 ) {
+  // ADD BUILD CHECK
+  if (shouldSkipDatabase()) {
+    return [];
+  }
+
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
@@ -122,6 +154,11 @@ export async function fetchFilteredInvoices(
 }
 
 export async function fetchInvoicesPages(query: string) {
+  // ADD BUILD CHECK
+  if (shouldSkipDatabase()) {
+    return 0;
+  }
+
   try {
     const data = await sql`SELECT COUNT(*)
     FROM invoices
@@ -143,6 +180,11 @@ export async function fetchInvoicesPages(query: string) {
 }
 
 export async function fetchInvoiceById(id: string) {
+  // ADD BUILD CHECK
+  if (shouldSkipDatabase()) {
+    return null;
+  }
+
   try {
     const data = await sql<InvoiceForm[]>`
       SELECT
@@ -169,6 +211,11 @@ export async function fetchInvoiceById(id: string) {
 }
 
 export async function fetchCustomers() {
+  // ADD BUILD CHECK
+  if (shouldSkipDatabase()) {
+    return [];
+  }
+
   try {
     const customers = await sql<CustomerField[]>`
       SELECT
@@ -186,6 +233,11 @@ export async function fetchCustomers() {
 }
 
 export async function fetchFilteredCustomers(query: string) {
+  // ADD BUILD CHECK
+  if (shouldSkipDatabase()) {
+    return [];
+  }
+
   try {
     const data = await sql<CustomersTableType[]>`
 		SELECT
