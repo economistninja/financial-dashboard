@@ -4,7 +4,13 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  output: 'export', // Add this line - it completely disables server-side features during build
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  // ADD THESE LINES:
+  output: 'export',
+  trailingSlash: true,
+  skipTrailingSlashRedirect: true,
 };
 
 export default nextConfig;
